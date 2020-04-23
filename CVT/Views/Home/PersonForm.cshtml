@@ -1,0 +1,204 @@
+﻿@model CVT.Models.PersonViewModel;
+
+@{
+    if (Model.Id > 0)
+        ViewData["Title"] = "Редактирование контакта";
+    else
+        ViewData["Title"] = "Добавление контакта";
+}
+
+@section breadcrumb{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Список контактов</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewBag.Title</li>
+        </ol>
+    </nav>
+}
+
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">@ViewBag.Title</h5>
+    </div>
+    <div class="card-body">
+        <form asp-antiforgery="true" asp-action="PersonSave">
+            <div class="validation" asp-validation-summary="All"></div>
+            <input asp-for="Id" hidden />
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="Surname" class="text-semibold required-field"></label>
+                        <input asp-for="Surname" class="form-control" placeholder="Фамилия" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="Name" class="text-semibold required-field"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Имя" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="MiddleName" class="text-semibold"></label>
+                        <input asp-for="MiddleName" class="form-control" placeholder="Отчество" />
+                        <span asp-validation-for="MiddleName"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="BirthDate" class="text-semibold"></label>
+                        <input asp-for="BirthDate" value="@Model.BirthDateString" readonly type="text" class="form-control datepicker" placeholder="Дата рождения" />
+                        <span asp-validation-for="BirthDate"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Organization" class="text-semibold"></label>
+                        <input asp-for="Organization" class="form-control" placeholder="Организация" />
+                        <span asp-validation-for="Organization"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Position" class="text-semibold"></label>
+                        <input asp-for="Position" class="form-control" placeholder="Должность" />
+                        <span asp-validation-for="Position"></span>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div>
+                    <h6 style="padding-left:20px; padding-right:20px; padding-bottom:20px;">Контактная информация</h6>
+                </div>
+            </div>
+
+            <div class="row">
+                <input id="contacts_count" value="@Model.Contacts.Count" hidden />
+                <div class="col-md-3">
+                    <div>
+                        <label>Телефон</label>
+                        <button type="button" class="btn btn-sm btn-outline-info float-right" id="phone_add_btn" title="Добавить телефон"><i class="fa fa-plus"></i></button>
+                    </div>
+                    <div id="phone_container" style="padding-top:15px;">
+                        @if (Model.Contacts?.Count > 0 && Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Phone).Count() > 0)
+                        {
+                            @foreach (var item in Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Phone))
+                            {
+                                var index = Model.Contacts.IndexOf(item);
+
+                                <div class="input-group mb-3 phoneBlock">
+                                <input type="text" class="form-control phone-inputmask contact_input" data-index="@index" data-inputmask="'mask': '+7(999)999-99-99'" placeholder="Номер телефона" name="Contacts[@(Model.Contacts.IndexOf(item))].Value" value="@item.Value" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button onclick="RemovePhoneBlock(this);" data-index="@index" class="btn btn-outline-danger remove_phone" type="button"><i class="fa fa-trash-alt"></i></button>
+                                </div>
+                                <input name="Contacts[@index].Id" class="contact_input" value="@item.Id" data-index="@index" hidden />
+                                <input name="Contacts[@index].Type" class="contact_input" value="@item.Type" data-index="@index" hidden />
+                                <input name="Contacts[@index].PersonId" class="contact_input" value="@item.PersonId" data-index="@index" hidden />
+                            </div>
+                        }
+                        }
+                        else
+                        {
+                            <p style="padding-left:30px;"><i>Нет данных</i></p>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div>
+                        <label>Email</label>
+                        <button type="button" class="btn btn-sm btn-outline-info float-right" id="email_add_btn" title="Добавить Email"><i class="fa fa-plus"></i></button>
+                    </div>
+                    <div id="email_container" style="padding-top:15px;">
+                        @if (Model.Contacts?.Count > 0 && Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Email).Count() > 0)
+                        {
+                            @foreach (var item in Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Email))
+                            {
+                                var index = Model.Contacts.IndexOf(item);
+
+                                <div class="input-group mb-3 emailBlock">
+                                    <input type="text" class="form-control contact_input" placeholder="Email" data-index="@index" name="Contacts[@index].Value" value="@item.Value" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button onclick="RemoveEmailBlock(this)" data-index="@index" class="btn btn-outline-danger remove_email" type="button"><i class="fa fa-trash-alt"></i></button>
+                                    </div>
+                                    <input name="Contacts[@index].Id" value="@item.Id" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].Type" value="@item.Type" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].PersonId" value="@item.PersonId" class="contact_input" data-index="@index" hidden />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p style="padding-left:30px;"><i>Нет данных</i></p>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div>
+                        <label>Skype</label>
+                        <button type="button" class="btn btn-sm btn-outline-info float-right" id="skype_add_btn" title="Добавить Skype"><i class="fa fa-plus"></i></button>
+                    </div>
+                    <div id="skype_container" style="padding-top:15px;">
+                        @if (Model.Contacts?.Count > 0 && Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Skype).Count() > 0)
+                        {
+                            @foreach (var item in Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Skype))
+                            {
+                                var index = Model.Contacts.IndexOf(item);
+
+                                <div class="input-group mb-3 skypeBlock">
+                                    <input type="text" class="form-control contact_input" placeholder="Skype" data-index="@index" name="Contacts[@index].Value" value="@item.Value" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button onclick="RemoveSkypeBlock(this)" data-index="@index" class="btn btn-outline-danger remove_skype" type="button"><i class="fa fa-trash-alt"></i></button>
+                                    </div>
+                                    <input name="Contacts[@index].Id" value="@item.Id" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].Type" value="@item.Type" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].PersonId" value="@item.PersonId" class="contact_input" data-index="@index" hidden />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p style="padding-left:30px;"><i>Нет данных</i></p>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div>
+                        <label>Другое</label>
+                        <button type="button" class="btn btn-sm btn-outline-info float-right" id="other_add_btn" title="Добавить другое"><i class="fa fa-plus"></i></button>
+                    </div>
+                    <div id="other_container" style="padding-top:15px;">
+                        @if (Model.Contacts?.Count > 0 && Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Other).Count() > 0)
+                        {
+                            @foreach (var item in Model.Contacts.Where(i => i.Type == BL.TypeContactEnum.Other))
+                            {
+                                var index = Model.Contacts.IndexOf(item);
+
+                                <div class="input-group mb-3 otherBlock">
+                                    <input type="text" class="form-control contact_input" placeholder="Другое" data-index="@index" name="Contacts[@index].Value" value="@item.Value" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button onclick="RemoveOtherBlock(this)" data-index="@index" class="btn btn-outline-danger remove_other" type="button"><i class="fa fa-trash-alt"></i></button>
+                                    </div>
+                                    <input name="Contacts[@index].Id" value="@item.Id" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].Type" value="@item.Type" class="contact_input" data-index="@index" hidden />
+                                    <input name="Contacts[@index].PersonId" value="@item.PersonId" class="contact_input" data-index="@index" hidden />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p style="padding-left:30px;"><i>Нет данных</i></p>
+                        }
+                    </div>
+                </div>
+        </div>
+
+        <div style="padding-top:20px;">
+            <button class="btn btn-success float-right" type="submit">Сохранить</button>
+        </div>
+        </form>
+    </div>
+    </div>

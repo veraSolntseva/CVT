@@ -1,0 +1,118 @@
+﻿@using CVT.Helpers;
+@model CVT.Models.IndexViewModel;
+@{
+    ViewData["Title"] = "Список контактов";
+}
+
+@section breadcrumb{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">@ViewBag.Title</li>
+        </ol>
+    </nav>
+}
+
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">@ViewBag.Title</h2>
+    </div>
+    <div class="card-body">
+        @if (Model.PersonList?.Count > 0)
+        {
+            <div>
+                <a asp-controller="Home" asp-action="PersonForm" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Добавить контакт</a>
+            </div>
+            <div style="padding-top:60px;">
+                <div class="validation" asp-validation-summary="All"></div>
+                <table id="contacts-table" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th class="dt-no-sort">Дата рождения</th>
+                            <th>Место работы/ <br />должность</th>
+                            <th class="dt-no-sort">Контактная информация</th>
+                            <th class="dt-no-sort">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var person in Model.PersonList)
+                        {
+                            <tr>
+                                <td>@person.FullName</td>
+                                <td>
+                                    @person.BirthDateString
+
+                                </td>
+                                <td>
+                                    @person.Organization
+                                    @if (!string.IsNullOrEmpty(person.Position))
+                                    {
+                                        <br />
+                                        @person.Position
+                                    }
+                                </td>
+                                <td>
+                                    @if (person.Contacts?.Count > 0)
+                                    {
+                                        <ul>
+                                            @foreach (var contact in person.Contacts)
+                                            {
+                                                <li>
+                                                    @contact.Type.GetDisplayValue(): @contact.Value
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-toolbar mb-3 d-flex justify-content-center" role="toolbar">
+                                        <div class="btn-group mr-2 float-none" role="group">
+                                            <a title="Редактировать" aria-label="Редактировать" asp-controller="Home" asp-action="PersonForm" asp-route-personId="@person.Id" class="btn btn-sm btn-outline-dark"><i class="fas fa-pencil-alt"></i></a>
+                                            <button type="button" title="Удалить" onclick="OpenModal(this)" data-personName="@person.FullName" data-personId="@person.Id" aria-label="Удалить" class="btn btn-sm btn-outline-dark"><i class="fa fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th><input type="text" class="filter_input" placeholder="Поиск..." /></th>
+                            <th><input type="text" class="filter_input" placeholder="Поиск..." /></th>
+                            <th><input type="text" class="filter_input" placeholder="Поиск..." /></th>
+                            <th><input type="text" class="filter_input" placeholder="Поиск..." /></th>
+                            <th class="dt-no-filter"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="panel-body">
+                <h2 class="text-center mt-5 mb-5">Список контактов пуст</h2>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Удаление контакта</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отменить</button>
+                <a title="Удалить" class="btn btn-primary" asp-controller="Home" asp-action="DeletePerson" asp-route-personId="0">Удалить</a>
+            </div>
+        </div>
+    </div>
+</div>
